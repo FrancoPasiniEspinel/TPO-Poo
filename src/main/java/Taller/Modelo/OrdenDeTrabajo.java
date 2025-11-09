@@ -1,91 +1,63 @@
 package Taller.Modelo;
 
 import java.util.Date;
-import java.util.List;
 
 public class OrdenDeTrabajo {
-
-    private int idTurno;
-    private EstadoTurno estado;
+    private int idOrdenDeTrabajo;
+    private String estado;
     private Date fechaCreacion;
     private Vehiculo vehiculo;
     private Mecanico mecanicoAsignado;
-    private String informeTecnico;
+    private Cliente clienteAsignado;
+    // private String informeTecnico;
     private String diagnostico;
-    private List<ItemRepuesto> repuestosUtilizados;
+    // private List<ItemRepuesto> repuestosUtilizados;
 
-    public OrdenDeTrabajo(int idTurno, EstadoTurno estado, Date fechaCreacion, Vehiculo vehiculo, Mecanico mecanicoAsignado, String informeTecnico, String diagnostico, List<ItemRepuesto> repuestosUtilizados) {
-        this.idTurno = idTurno;
+    public OrdenDeTrabajo(int idOrdenDeTrabajo, String estado, Date fechaCreacion, Vehiculo vehiculo, Mecanico mecanicoAsignado, Cliente clienteAsignado, String diagnostico) {
+        this.idOrdenDeTrabajo = idOrdenDeTrabajo;
         this.estado = estado;
         this.fechaCreacion = fechaCreacion;
         this.vehiculo = vehiculo;
         this.mecanicoAsignado = mecanicoAsignado;
-        this.informeTecnico = informeTecnico;
+        this.clienteAsignado = clienteAsignado;
         this.diagnostico = diagnostico;
-        this.repuestosUtilizados = repuestosUtilizados;
     }
 
-    public int getIdTurno() {
-        return idTurno;
+    public int getIdOrdenDeTrabajo() {
+        return idOrdenDeTrabajo;
     }
 
-    public void setIdTurno(int idTurno) {
-        this.idTurno = idTurno;
-    }
-
-    public EstadoTurno getEstado() {
+    public String getEstado() {
         return estado;
     }
 
-    public void setEstado(EstadoTurno estado) {
-        this.estado = estado;
-    }
-
-    public Date getFechaServicio() {
+    public Date getFechaCreacion() {
         return fechaCreacion;
-    }
-
-    public void setFechaServicio(Date fechaServicio) {
-        this.fechaCreacion = fechaServicio;
     }
 
     public Vehiculo getVehiculo() {
         return vehiculo;
     }
 
-    public void setVehiculo(Vehiculo vehiculo) {
-        this.vehiculo = vehiculo;
-    }
-
     public Mecanico getMecanicoAsignado() {
         return mecanicoAsignado;
     }
 
-    public void setMecanicoAsignado(Mecanico mecanicoAsignado) {
-        this.mecanicoAsignado = mecanicoAsignado;
+    public Cliente getClienteAsignado() {
+        return clienteAsignado;
     }
 
-    public String getInformeTecnico() {
-        return informeTecnico;
-    }
-
-    public void setInformeTecnico(String informeTecnico) {
-        this.informeTecnico = informeTecnico;
-    }
+//    public String getInformeTecnico() {
+//        return informeTecnico;
+//    }
 
     public String getDiagnostico() {
         return diagnostico;
     }
 
-    public void setDiagnostico(String diagnostico) {
-        this.diagnostico = diagnostico;
-    }
+//    public List<ItemRepuesto> getRepuestosUtilizados() {
+//        return repuestosUtilizados;
+//    }
 
-    public List<ItemRepuesto> getRepuestosUtilizados() {
-        return repuestosUtilizados;
-    }
 
-    public void setRepuestosUtilizados(List<ItemRepuesto> repuestosUtilizados) {
-        this.repuestosUtilizados = repuestosUtilizados;
-    }
 }

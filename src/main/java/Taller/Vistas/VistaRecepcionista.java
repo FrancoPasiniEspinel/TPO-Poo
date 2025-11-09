@@ -1,254 +1,269 @@
 package Taller.Vistas;
 
-import Taller.Modelo.Cliente;
-import Taller.Modelo.Vehiculo;
-import Taller.Modelo.OrdenDeTrabajo;
+import Taller.Controlador.ControladorOrdenes;
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
+import java.awt.event.ActionEvent;
 
-// import Taller.Gestor.GestorOrdenes;
+import Taller.Modelo.Cliente;
+import Taller.Modelo.OrdenDeTrabajo;
+import Taller.Modelo.Vehiculo;
 
 public class VistaRecepcionista extends JFrame {
 
-    private final GestorOrdenes gestorOrdenes;
+    private ControladorOrdenes controladorOrdenes;
 
-    // Componentes de la GUI
-    private JTabbedPane tabbedPane;
+    // --- COMPONENTES DEL FORMULARIO ---
+    private JTextField txtDni, txtNombre, txtTelefono, txtPatente, txtDescripcion, txtMarca, txtModelo, txtAnio;
+    private JButton btnGenerarOrden;
 
-    // Componentes de Búsqueda y Creación
-    private JTextField txtDniBusqueda;
-    private JTextField txtNombreCliente;
-    private JTextField txtTelefonoCliente;
-    private JTextField txtPatenteVehiculo;
-    private JTextArea txtDescripcionFalla;
-    private JButton btnBuscarCliente;
-    private JButton btnCrearOrden;
+    // --- COMPONENTES DEL BUSCADOR ---
+    private JTextField txtPatenteBuscar;
+    private JButton btnBuscarOrden, btnDevolverVehiculo;
+    private JTextArea txtResultadoOrden;
 
-    // Componentes de Consulta y Finalización
-    private JTextField txtIdOrdenConsulta;
-    private JButton btnConsultarEstado;
-    private JButton btnRetiro;
-    private JButton btnEntrega;
-    private JButton btnVerHistorial;
 
-    /**
-     * Constructor enfocado solo en el diseño (sin inyección de dependencia para la visualización).
-     */
-    public VistaRecepcionista(/* Gestores deberían ir aquí */) {
+    public VistaRecepcionista(ControladorOrdenes controladorOrdenes) {
         super("Módulo Recepcionista - Taller Mecánico");
 
+        this.controladorOrdenes = controladorOrdenes;
+        inicializarVentana();
         inicializarComponentes();
+    }
 
-        this.setSize(900, 650);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLocationRelativeTo(null);
-        mostrarMenu();
+    private void inicializarVentana() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
     }
 
     private void inicializarComponentes() {
-        tabbedPane = new JTabbedPane();
+        JTabbedPane pestañas = new JTabbedPane();
 
-        // 1. Pestaña: Carga de Órdenes (Funcionalidades principales)
-        tabbedPane.addTab("1. Carga de Cliente y Órdenes", crearPanelCargaOrden());
+        pestañas.addTab("1. Generar Orden de Trabajo", crearPanelGenerarOrden());
+        pestañas.addTab("2. Consultar y Devolver Vehículo", crearPanelBuscarOrden());
 
-        // 2. Pestaña: Consultas (Estado, Historial, Retiro/Entrega)
-        tabbedPane.addTab("2. Consultas y Finalización", crearPanelConsultas());
-
-        this.add(tabbedPane);
+        add(pestañas, BorderLayout.CENTER);
     }
 
-    /**
-     * Implementa la funcionalidad mostrarMenu(). En una GUI, es el inicio de la ventana.
-     */
-    public void mostrarMenu() {
-        System.out.println("Recepcionista: Menú principal activo (Ventana de Pestañas)");
-    }
-
-    // =================================================================================
-    // PESTAÑA 1: CARGA DE ÓRDENES
-    // =================================================================================
-
-    private JPanel crearPanelCargaOrden() {
-        JPanel panel = new JPanel(new BorderLayout(15, 15));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        // Panel Norte: Búsqueda y Carga de Cliente
-        JPanel pnlCliente = crearPanelCliente();
-        panel.add(pnlCliente, BorderLayout.NORTH);
-
-        // Panel Central: Datos del Vehículo y Orden
-        JPanel pnlOrden = crearPanelDatosOrden();
-        panel.add(pnlOrden, BorderLayout.CENTER);
-
-        return panel;
-    }
-
-    private JPanel crearPanelCliente() {
-        JPanel pnlCliente = new JPanel(new GridBagLayout());
-        pnlCliente.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
-                "Carga y Búsqueda de Cliente"));
-
+    // PESTAÑA 1: FORMULARIO DE NUEVA ORDEN
+    private JPanel crearPanelGenerarOrden() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Generar Nueva Orden de Trabajo"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(8, 10, 8, 10);
         gbc.anchor = GridBagConstraints.WEST;
-
-        // Fila 1: Búsqueda por DNI (buscarClientePorDni)
-        gbc.gridx = 0; gbc.gridy = 0;
-        pnlCliente.add(new JLabel("DNI Cliente:"), gbc);
-
-        gbc.gridx = 1; gbc.weightx = 0.5; gbc.fill = GridBagConstraints.HORIZONTAL;
-        txtDniBusqueda = new JTextField(15);
-        pnlCliente.add(txtDniBusqueda, gbc);
-
-        gbc.gridx = 2; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
-        btnBuscarCliente = new JButton("Buscar Cliente"); // Mapea a buscarClientePorDni()
-        // btnBuscarCliente.addActionListener(e -> buscarClientePorDni());
-        pnlCliente.add(btnBuscarCliente, gbc);
-
-        // Fila 2: Nombre
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
-        pnlCliente.add(new JLabel("Nombre:"), gbc);
-
-        gbc.gridx = 1; gbc.weightx = 0.5; gbc.fill = GridBagConstraints.HORIZONTAL;
-        txtNombreCliente = new JTextField(20);
-        pnlCliente.add(txtNombreCliente, gbc);
-
-        // Fila 2: Teléfono
-        gbc.gridx = 2; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
-        pnlCliente.add(new JLabel("Teléfono:"), gbc);
-
-        gbc.gridx = 3; gbc.weightx = 0.5; gbc.fill = GridBagConstraints.HORIZONTAL;
-        txtTelefonoCliente = new JTextField(15);
-        pnlCliente.add(txtTelefonoCliente, gbc);
-
-        // Botón de Carga/Modificación (mapea a cargarCliente / modificarOrdenReparacion)
-        JButton btnCargarModificar = new JButton("Cargar cliente (cargarCliente)");
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 4; gbc.anchor = GridBagConstraints.CENTER;
-        pnlCliente.add(btnCargarModificar, gbc);
-
-        return pnlCliente;
-    }
-
-    private JPanel crearPanelDatosOrden() {
-        JPanel pnlOrden = new JPanel(new GridBagLayout());
-        pnlOrden.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GRAY),
-                "Datos del Vehículo y Orden (crearOrdenReparacion)"));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 10, 8, 10);
-        gbc.anchor = GridBagConstraints.NORTHWEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Fila 1: Patente y Tipo de Vehículo
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
-        pnlOrden.add(new JLabel("Patente Vehículo:"), gbc);
+        // --- Datos del cliente ---
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("DNI:"), gbc);
+        gbc.gridx = 1;
+        txtDni = new JTextField(15);
+        panel.add(txtDni, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.5;
-        txtPatenteVehiculo = new JTextField(15);
-        pnlOrden.add(txtPatenteVehiculo, gbc);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Nombre:"), gbc);
+        gbc.gridx = 1;
+        txtNombre = new JTextField(20);
+        panel.add(txtNombre, gbc);
 
-        // Fila 2: Descripción de la Falla
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0; gbc.anchor = GridBagConstraints.NORTHWEST;
-        pnlOrden.add(new JLabel("Descripción Falla:"), gbc);
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Teléfono:"), gbc);
+        gbc.gridx = 1;
+        txtTelefono = new JTextField(15);
+        panel.add(txtTelefono, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1; gbc.gridwidth = 3; gbc.weightx = 1.0; gbc.gridheight = 2; gbc.fill = GridBagConstraints.BOTH;
-        txtDescripcionFalla = new JTextArea(5, 20);
-        JScrollPane scroll = new JScrollPane(txtDescripcionFalla);
-        pnlOrden.add(scroll, gbc);
+        // --- Datos del vehículo ---
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(new JLabel("Patente:"), gbc);
+        gbc.gridx = 1;
+        txtPatente = new JTextField(10);
+        panel.add(txtPatente, gbc);
 
-        // Fila 3: Botón de Crear Orden
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 4; gbc.gridheight = 1; gbc.weighty = 0.0;
-        gbc.fill = GridBagConstraints.NONE; gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(new JLabel("Marca:"), gbc);
+        gbc.gridx = 1;
+        txtMarca = new JTextField(15);
+        panel.add(txtMarca, gbc);
 
-        btnCrearOrden = new JButton("GENERAR NUEVA ORDEN DE TRABAJO"); // Mapea a crearOrdenReparacion
-        btnCrearOrden.setBackground(new Color(40, 150, 40));
-        btnCrearOrden.setForeground(Color.BLACK);
-        // btnCrearOrden.addActionListener(e -> crearOrdenReparacion());
-        pnlOrden.add(btnCrearOrden, gbc);
+        gbc.gridx = 0; gbc.gridy = 5;
+        panel.add(new JLabel("Modelo:"), gbc);
+        gbc.gridx = 1;
+        txtModelo = new JTextField(15);
+        panel.add(txtModelo, gbc);
 
-        return pnlOrden;
-    }
+        gbc.gridx = 0; gbc.gridy = 6;
+        panel.add(new JLabel("Año de Fabricación:"), gbc);
+        gbc.gridx = 1;
+        txtAnio = new JTextField(6);
+        panel.add(txtAnio, gbc);
 
-    // =================================================================================
-    // PESTAÑA 2: CONSULTAS Y FINALIZACIÓN
-    // =================================================================================
+        gbc.gridx = 0; gbc.gridy = 7;
+        panel.add(new JLabel("Descripción de la falla:"), gbc);
+        gbc.gridx = 1;
+        txtDescripcion = new JTextField(25);
+        panel.add(txtDescripcion, gbc);
 
-    private JPanel crearPanelConsultas() {
-        JPanel panel = new JPanel(new BorderLayout(15, 15));
-
-        // Panel Norte: Consultas y Acciones (Estado, Retiro, Entrega)
-        JPanel pnlAcciones = crearPanelAccionesConsulta();
-        panel.add(pnlAcciones, BorderLayout.NORTH);
-
-        // Panel Central: Historial (JTable)
-        JPanel pnlHistorial = crearPanelHistorial();
-        panel.add(pnlHistorial, BorderLayout.CENTER);
+        // --- Botón para crear la orden ---
+        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+        btnGenerarOrden = new JButton("Generar Orden de Trabajo");
+        btnGenerarOrden.setBackground(new Color(40, 150, 40));
+        btnGenerarOrden.setForeground(Color.BLACK);
+        btnGenerarOrden.addActionListener(this::accionGenerarOrden);
+        panel.add(btnGenerarOrden, gbc);
 
         return panel;
     }
 
-    private JPanel crearPanelAccionesConsulta() {
-        JPanel pnlAcciones = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        pnlAcciones.setBorder(BorderFactory.createTitledBorder("Consultas y Finalización"));
+    private void accionGenerarOrden(ActionEvent e) {
+        String dni = txtDni.getText();
+        String nombre = txtNombre.getText();
+        String telefono = txtTelefono.getText();
+        String patente = txtPatente.getText();
+        String marca = txtMarca.getText();
+        String modelo = txtModelo.getText();
+        String anioStr = txtAnio.getText();
+        String descripcion = txtDescripcion.getText();
 
-        txtIdOrdenConsulta = new JTextField(8);
+        if (dni.isEmpty() || nombre.isEmpty() || telefono.isEmpty() || patente.isEmpty() ||
+                marca.isEmpty() || modelo.isEmpty() || anioStr.isEmpty() || descripcion.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Complete todos los campos antes de generar la orden.",
+                    "Campos incompletos",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-        // Botón 1: Consultar Estado
-        btnConsultarEstado = new JButton("Consultar Estado (consultarEstadoOrden)");
-        // btnConsultarEstado.addActionListener(e -> consultarEstadoOrden());
+        boolean respuesta;
+        try {
+            int dniNum = Integer.parseInt(dni);
+            int telefonoNum = Integer.parseInt(telefono);
+            int anioFab = Integer.parseInt(anioStr);
 
-        // Botón 2: Registrar Retiro
-        btnRetiro = new JButton("Registrar Retiro (registrarRetiroVehiculo)");
-        btnRetiro.setBackground(new Color(250, 100, 100));
-        // btnRetiro.addActionListener(e -> registrarRetiroVehiculo());
+            respuesta = controladorOrdenes.generarOrden(
+                    dniNum, nombre, telefonoNum, patente, marca, modelo, anioFab, descripcion);
 
-        // Botón 3: Registrar Entrega
-        btnEntrega = new JButton("Registrar Entrega (registrarEntregaVehiculo)");
-        btnEntrega.setBackground(new Color(100, 100, 250));
-        // btnEntrega.addActionListener(e -> registrarEntregaVehiculo());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error: DNI, Teléfono o Año deben ser valores numéricos.",
+                    "Error de formato",
+                    JOptionPane.ERROR_MESSAGE);
+            respuesta = false;
+        }
 
-
-        pnlAcciones.add(new JLabel("ID Orden:"));
-        pnlAcciones.add(txtIdOrdenConsulta);
-        pnlAcciones.add(btnConsultarEstado);
-        pnlAcciones.add(new JSeparator(SwingConstants.VERTICAL));
-        pnlAcciones.add(btnRetiro);
-        pnlAcciones.add(btnEntrega);
-
-        return pnlAcciones;
+        if (!respuesta) {
+            JOptionPane.showMessageDialog(this,
+                    "Generación de orden fallida.",
+                    "Error",
+                    JOptionPane.WARNING_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Orden generada correctamente.",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE);
+            limpiarCamposFormulario();
+        }
     }
 
-    private JPanel crearPanelHistorial() {
-        JPanel pnlHistorial = new JPanel(new BorderLayout());
-        pnlHistorial.setBorder(BorderFactory.createTitledBorder("Historial de Órdenes por Cliente (verHistorialCliente)"));
-
-        // JTable: Componente esencial para mostrar listas de datos
-        String[] columnas = {"ID Orden", "Vehículo", "Fecha Servicio", "Estado"};
-        JTable tablaHistorial = new JTable(new Object[0][0], columnas);
-
-        btnVerHistorial = new JButton("Mostrar Historial del Cliente Cargado");
-        btnVerHistorial.setBackground(new Color(150, 150, 250));
-        // btnVerHistorial.addActionListener(e -> verHistorialCliente());
-
-        pnlHistorial.add(new JScrollPane(tablaHistorial), BorderLayout.CENTER);
-        pnlHistorial.add(btnVerHistorial, BorderLayout.SOUTH);
-
-        return pnlHistorial;
+    private void limpiarCamposFormulario() {
+        txtDni.setText("");
+        txtNombre.setText("");
+        txtTelefono.setText("");
+        txtPatente.setText("");
+        txtMarca.setText("");
+        txtModelo.setText("");
+        txtAnio.setText("");
+        txtDescripcion.setText("");
     }
 
-    // =================================================================================
-    // MÉTODOS DEL DIAGRAMA (Se implementan vacíos para compatibilidad)
-    // =================================================================================
+    // PESTAÑA 2: BUSCADOR DE ORDENES
+    private JPanel crearPanelBuscarOrden() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Consulta de Ordenes"));
 
-    // Todos estos métodos deben ser llamados por los ActionListeners de los botones.
+        JPanel pnlBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        pnlBusqueda.add(new JLabel("Patente:"));
+        txtPatenteBuscar = new JTextField(10);
+        pnlBusqueda.add(txtPatenteBuscar);
 
-    public boolean cargarCliente(Cliente cliente) { return true; } // Mapea a cargarCliente()
-    public boolean modificarOrdenReparacion(int idOrden, String nuevosDatos) { return true; } // Mapea a botón de modificación
-    public OrdenDeTrabajo crearOrdenReparacion(Cliente cliente, Vehiculo vehiculo, String descripcion) { return null; } // Mapea a btnCrearOrden
-    public String consultarEstadoOrden(int idOrden) { return null; } // Mapea a btnConsultarEstado
-    public boolean registrarRetiroVehiculo(int idOrden) { return true; } // Mapea a btnRetiro
-    public Cliente buscarClientePorDni(String dni) { return null; } // Mapea a btnBuscarCliente
-    public boolean registrarEntregaVehiculo(int idOrden) { return true; } // Mapea a btnEntrega
-    public List<OrdenDeTrabajo> verHistorialCliente(int idCliente) { return null; } // Mapea a btnVerHistorial
+        btnBuscarOrden = new JButton("Buscar Orden");
+        btnBuscarOrden.addActionListener(this::accionBuscarOrden);
+        pnlBusqueda.add(btnBuscarOrden);
+
+        btnDevolverVehiculo = new JButton("Devolver Vehículo");
+        btnDevolverVehiculo.setEnabled(false);
+        btnDevolverVehiculo.setBackground(new Color(200, 100, 100));
+        btnDevolverVehiculo.addActionListener(this::accionDevolverVehiculo);
+        pnlBusqueda.add(btnDevolverVehiculo);
+
+        txtResultadoOrden = new JTextArea(10, 50);
+        txtResultadoOrden.setEditable(false);
+        txtResultadoOrden.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+        panel.add(pnlBusqueda, BorderLayout.NORTH);
+        panel.add(new JScrollPane(txtResultadoOrden), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private void accionBuscarOrden(ActionEvent e) {
+        String patente = txtPatenteBuscar.getText().trim();
+        if (patente.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Ingrese una patente para buscar.",
+                    "Campo vacío",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        OrdenDeTrabajo orden = controladorOrdenes.buscarOrdenPorPatente(patente);
+
+        if (orden == null) {
+            txtResultadoOrden.setText("No se encontró ninguna orden asociada a la patente: " + patente);
+            btnDevolverVehiculo.setEnabled(false);
+            return;
+        }
+
+        Cliente cliente = orden.getClienteAsignado();
+        Vehiculo vehiculo = orden.getVehiculo();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("ORDEN DE TRABAJO #").append(orden.getIdOrdenDeTrabajo()).append("\n");
+        sb.append("Fecha de creación: ").append(orden.getFechaCreacion()).append("\n");
+        sb.append("Estado actual: ").append(orden.getEstado()).append("\n\n");
+
+        sb.append("CLIENTE\n");
+        sb.append("DNI: ").append(cliente.getDni()).append("\n");
+        sb.append("Nombre: ").append(cliente.getNombre()).append("\n");
+        sb.append("Teléfono: ").append(cliente.getTelefono()).append("\n\n");
+
+        sb.append("VEHÍCULO\n");
+        sb.append("Patente: ").append(vehiculo.getPatente()).append("\n");
+        sb.append("Marca: ").append(vehiculo.getMarca()).append("\n");
+        sb.append("Modelo: ").append(vehiculo.getModelo()).append("\n");
+        sb.append("Año de fabricación: ").append(vehiculo.getAñoFabricacion()).append("\n\n");
+
+        sb.append("DIAGNÓSTICO\n");
+        sb.append(orden.getDiagnostico()).append("\n");
+
+        txtResultadoOrden.setText(sb.toString());
+
+        // Habilitar el botón solo si la orden está finalizada
+        btnDevolverVehiculo.setEnabled("Pagado".equalsIgnoreCase(orden.getEstado()));
+    }
+
+    private void accionDevolverVehiculo(ActionEvent e) {
+        String patente = txtPatenteBuscar.getText();
+        OrdenDeTrabajo orden = controladorOrdenes.buscarOrdenPorPatente(patente);
+
+        if (orden != null && "Pagado".equalsIgnoreCase(orden.getEstado())) {
+            controladorOrdenes.registrarEntregaVehiculo(orden.getIdOrdenDeTrabajo());
+            JOptionPane.showMessageDialog(this,
+                    "Vehículo devuelto correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            btnDevolverVehiculo.setEnabled(false);
+            txtResultadoOrden.append("\nEstado actualizado: Entregado");
+        }
+    }
 }

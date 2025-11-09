@@ -47,7 +47,7 @@ public class VistaMecanico extends JFrame {
     }
     static class OrdenSimulada extends OrdenDeTrabajo {
         public OrdenSimulada(int id, String estado, String cliente, String patente) {
-            super(id, null, null, new VehiculoSimulado(patente), new Mecanico(), null, null, null);
+            super(id, null, null, new VehiculoSimulado(patente), new Mecanico(), null, null);
             // Simulación de campos necesarios
             this.estado = estado;
             this.cliente = cliente;

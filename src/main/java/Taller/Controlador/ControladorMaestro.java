@@ -12,11 +12,12 @@ public class ControladorMaestro {
     // Vistas
     private JFrame vistaAdministrativo = new VistaAdministrativo();
     private JFrame vistaMecanico = new VistaMecanico();
-    private JFrame vistaRecepcionista = new VistaRecepcionista();
+    private JFrame vistaRecepcionista;
     private JFrame vistaLogin;
 
     // Controladores
-    ControladorLogin controladorLogin;
+    private ControladorLogin controladorLogin;
+    private ControladorOrdenes controladorOrdenes;
 
     public void iniciar() {
         controladorLogin = new ControladorLogin(this);
@@ -37,7 +38,8 @@ public class ControladorMaestro {
                 vistaAdministrativo.setVisible(true);
                 break;
             case "Recepcionista":
-                vistaRecepcionista = new VistaRecepcionista();
+                controladorOrdenes = new ControladorOrdenes(this);
+                vistaRecepcionista = new VistaRecepcionista(controladorOrdenes);
                 vistaRecepcionista.setVisible(true);
                 break;
         }
