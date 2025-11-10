@@ -4,11 +4,9 @@ import Taller.Modelo.GestorOrdenes;
 import Taller.Modelo.OrdenDeTrabajo;
 
 public class ControladorOrdenes {
-    private final ControladorMaestro controladorMaestro;
     private final GestorOrdenes gestorOrdenes;
 
-    public ControladorOrdenes(ControladorMaestro controladorMaestro) {
-        this.controladorMaestro = controladorMaestro;
+    public ControladorOrdenes() {
         this.gestorOrdenes = new GestorOrdenes();
     }
 
@@ -21,13 +19,13 @@ public class ControladorOrdenes {
         return gestorOrdenes.buscarOrdenPorPatente(patente);
     }
 
-    public boolean registrarEntregaVehiculo(int idOrdenDeTrabajo) {
-        return gestorOrdenes.registrarEntregaVehiculo(idOrdenDeTrabajo);
+    public boolean registrarEntregaOrden(int idOrdenDeTrabajo) {
+        return gestorOrdenes.registrarEntregaOrden(idOrdenDeTrabajo);
     }
 
     public OrdenDeTrabajo obtenerOrdenMecanico(int legajo) {
         OrdenDeTrabajo ordenAsignada = gestorOrdenes.obtenerOrdenMecanico(legajo);
-        if (ordenAsignada == null){
+        if (ordenAsignada == null) {
             ordenAsignada = gestorOrdenes.asignarOrdenPrioritaria(legajo);
         }
         return ordenAsignada;
@@ -39,5 +37,13 @@ public class ControladorOrdenes {
 
     public boolean actualizarHorasOrden(int idOrdenDeTrabajo, int horasTrabajo) {
         return gestorOrdenes.actualizarHorasOrden(idOrdenDeTrabajo, horasTrabajo);
+    }
+
+    public boolean registrarReparacionOrden(int idOrdenDeTrabajo) {
+        return gestorOrdenes.registrarReparacionOrden(idOrdenDeTrabajo);
+    }
+
+    public boolean registrarPagoOrden(int idOrdenDeTrabajo) {
+        return gestorOrdenes.registrarPagoOrden(idOrdenDeTrabajo);
     }
 }

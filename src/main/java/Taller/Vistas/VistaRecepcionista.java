@@ -1,5 +1,6 @@
 package Taller.Vistas;
 
+import Taller.Controlador.ControladorMaestro;
 import Taller.Controlador.ControladorOrdenes;
 import Taller.Modelo.Cliente;
 import Taller.Modelo.OrdenDeTrabajo;
@@ -12,21 +13,19 @@ import java.awt.event.ActionEvent;
 public class VistaRecepcionista extends JFrame {
 
     private final ControladorOrdenes controladorOrdenes;
+    private final ControladorMaestro controladorMaestro;
 
-    // --- COMPONENTES DEL FORMULARIO ---
     private JTextField txtDni, txtNombre, txtTelefono, txtPatente, txtDescripcion, txtMarca, txtModelo, txtAnio;
     private JButton btnGenerarOrden;
 
-    // --- COMPONENTES DEL BUSCADOR ---
     private JTextField txtPatenteBuscar;
     private JButton btnBuscarOrden, btnDevolverVehiculo;
     private JTextArea txtResultadoOrden;
 
-
-    public VistaRecepcionista(ControladorOrdenes controladorOrdenes) {
+    public VistaRecepcionista(ControladorOrdenes controladorOrdenes, ControladorMaestro controladorMaestro) {
         super("Módulo Recepcionista - Taller Mecánico");
-
         this.controladorOrdenes = controladorOrdenes;
+        this.controladorMaestro = controladorMaestro;
         inicializarVentana();
         inicializarComponentes();
     }
@@ -40,14 +39,27 @@ public class VistaRecepcionista extends JFrame {
 
     private void inicializarComponentes() {
         JTabbedPane pestañas = new JTabbedPane();
-
         pestañas.addTab("1. Generar Orden de Trabajo", crearPanelGenerarOrden());
         pestañas.addTab("2. Consultar y Devolver Vehículo", crearPanelBuscarOrden());
-
         add(pestañas, BorderLayout.CENTER);
+        add(crearPanelInferior(), BorderLayout.SOUTH);
     }
 
-    // PESTAÑA 1: FORMULARIO DE NUEVA ORDEN
+    private JPanel crearPanelInferior() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+        btnCerrarSesion.setBackground(new Color(200, 80, 80));
+        btnCerrarSesion.setForeground(Color.BLACK);
+        btnCerrarSesion.addActionListener(this::accionCerrarSesion);
+        panel.add(btnCerrarSesion);
+        return panel;
+    }
+
+    private void accionCerrarSesion(ActionEvent e) {
+        this.dispose();
+        controladorMaestro.cerrarSesion();
+    }
+
     private JPanel crearPanelGenerarOrden() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Generar Nueva Orden de Trabajo"));
@@ -56,67 +68,55 @@ public class VistaRecepcionista extends JFrame {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // --- Datos del cliente ---
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0;
         panel.add(new JLabel("DNI:"), gbc);
         gbc.gridx = 1;
         txtDni = new JTextField(15);
         panel.add(txtDni, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 1;
         panel.add(new JLabel("Nombre:"), gbc);
         gbc.gridx = 1;
         txtNombre = new JTextField(20);
         panel.add(txtNombre, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridx = 0; gbc.gridy = 2;
         panel.add(new JLabel("Teléfono:"), gbc);
         gbc.gridx = 1;
         txtTelefono = new JTextField(15);
         panel.add(txtTelefono, gbc);
 
-        // --- Datos del vehículo ---
-        gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridx = 0; gbc.gridy = 3;
         panel.add(new JLabel("Patente:"), gbc);
         gbc.gridx = 1;
         txtPatente = new JTextField(10);
         panel.add(txtPatente, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridx = 0; gbc.gridy = 4;
         panel.add(new JLabel("Marca:"), gbc);
         gbc.gridx = 1;
         txtMarca = new JTextField(15);
         panel.add(txtMarca, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridx = 0; gbc.gridy = 5;
         panel.add(new JLabel("Modelo:"), gbc);
         gbc.gridx = 1;
         txtModelo = new JTextField(15);
         panel.add(txtModelo, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridx = 0; gbc.gridy = 6;
         panel.add(new JLabel("Año de Fabricación:"), gbc);
         gbc.gridx = 1;
         txtAnio = new JTextField(6);
         panel.add(txtAnio, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridx = 0; gbc.gridy = 7;
         panel.add(new JLabel("Descripción de la falla:"), gbc);
         gbc.gridx = 1;
         txtDescripcion = new JTextField(25);
         panel.add(txtDescripcion, gbc);
 
-        // --- Botón para crear la orden ---
-        gbc.gridx = 0;
-        gbc.gridy = 8;
+        gbc.gridx = 0; gbc.gridy = 8;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         btnGenerarOrden = new JButton("Generar Orden de Trabajo");
@@ -140,10 +140,8 @@ public class VistaRecepcionista extends JFrame {
 
         if (dni.isEmpty() || nombre.isEmpty() || telefono.isEmpty() || patente.isEmpty() ||
                 marca.isEmpty() || modelo.isEmpty() || anioStr.isEmpty() || descripcion.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Complete todos los campos antes de generar la orden.",
-                    "Campos incompletos",
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Complete todos los campos antes de generar la orden.",
+                    "Campos incompletos", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -152,38 +150,25 @@ public class VistaRecepcionista extends JFrame {
             int dniNum = Integer.parseInt(dni);
             int telefonoNum = Integer.parseInt(telefono);
             int anioFab = Integer.parseInt(anioStr);
-
-            respuesta = controladorOrdenes.generarOrden(
-                    dniNum, nombre, telefonoNum, patente, marca, modelo, anioFab, descripcion);
-
+            respuesta = controladorOrdenes.generarOrden(dniNum, nombre, telefonoNum, patente, marca, modelo, anioFab, descripcion);
         } catch (NumberFormatException ex) {
             respuesta = "noNumerico";
         }
 
         switch (respuesta) {
             case "fallo":
-                JOptionPane.showMessageDialog(this,
-                        "Generación de orden fallida.",
-                        "Error",
-                        JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Generación de orden fallida.", "Error", JOptionPane.WARNING_MESSAGE);
                 break;
             case "exito":
-                JOptionPane.showMessageDialog(this,
-                        "Orden generada correctamente.",
-                        "Éxito",
-                        JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Orden generada correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCamposFormulario();
+                break;
             case "noNumerico":
-                JOptionPane.showMessageDialog(this,
-                        "Error: DNI, Teléfono o Año deben ser valores numéricos.",
-                        "Error de formato",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: DNI, Teléfono o Año deben ser numéricos.", "Error de formato", JOptionPane.ERROR_MESSAGE);
                 break;
             case "duplicado":
-                JOptionPane.showMessageDialog(this,
-                        "El vehiculo ya pertenece a una Orden De Trabajo",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "El vehículo ya pertenece a una Orden De Trabajo", "Error", JOptionPane.ERROR_MESSAGE);
+                break;
         }
     }
 
@@ -198,7 +183,6 @@ public class VistaRecepcionista extends JFrame {
         txtDescripcion.setText("");
     }
 
-    // PESTAÑA 2: BUSCADOR DE ORDENES
     private JPanel crearPanelBuscarOrden() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("Consulta de Ordenes"));
@@ -231,15 +215,11 @@ public class VistaRecepcionista extends JFrame {
     private void accionBuscarOrden(ActionEvent e) {
         String patente = txtPatenteBuscar.getText().trim();
         if (patente.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Ingrese una patente para buscar.",
-                    "Campo vacío",
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Ingrese una patente para buscar.", "Campo vacío", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         OrdenDeTrabajo orden = controladorOrdenes.buscarOrdenPorPatente(patente);
-
         if (orden == null) {
             txtResultadoOrden.setText("No se encontró ninguna orden asociada a la patente: " + patente);
             btnDevolverVehiculo.setEnabled(false);
@@ -265,19 +245,15 @@ public class VistaRecepcionista extends JFrame {
                 orden.getDiagnostico() + "\n";
 
         txtResultadoOrden.setText(sb);
-
-        // Habilitar el botón solo si la orden está finalizada
         btnDevolverVehiculo.setEnabled("Pagado".equalsIgnoreCase(orden.getEstado()));
     }
 
     private void accionDevolverVehiculo(ActionEvent e) {
         String patente = txtPatenteBuscar.getText();
         OrdenDeTrabajo orden = controladorOrdenes.buscarOrdenPorPatente(patente);
-
         if (orden != null && "Pagado".equalsIgnoreCase(orden.getEstado())) {
-            controladorOrdenes.registrarEntregaVehiculo(orden.getIdOrdenDeTrabajo());
-            JOptionPane.showMessageDialog(this,
-                    "Vehículo devuelto correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            controladorOrdenes.registrarEntregaOrden(orden.getIdOrdenDeTrabajo());
+            JOptionPane.showMessageDialog(this, "Vehículo devuelto correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
             btnDevolverVehiculo.setEnabled(false);
             txtResultadoOrden.append("\nEstado actualizado: Entregado");
         }

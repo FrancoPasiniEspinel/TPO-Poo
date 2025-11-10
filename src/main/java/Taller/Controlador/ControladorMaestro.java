@@ -18,6 +18,7 @@ public class ControladorMaestro {
     // Controladores
     private ControladorLogin controladorLogin;
     private ControladorOrdenes controladorOrdenes;
+    private ControladorFacturas controladorFacturas;
 
     public void iniciar() {
         controladorLogin = new ControladorLogin(this);
@@ -30,19 +31,27 @@ public class ControladorMaestro {
 
         switch (empleado.getTipo()) {
             case "Mecanico":
-                controladorOrdenes = new ControladorOrdenes(this);
-                vistaMecanico = new VistaMecanico(empleado, controladorOrdenes);
+                controladorOrdenes = new ControladorOrdenes();
+                vistaMecanico = new VistaMecanico(empleado, controladorOrdenes, this);
                 vistaMecanico.setVisible(true);
                 break;
             case "Administrativo":
-                vistaAdministrativo = new VistaAdministrativo();
+                controladorFacturas = new ControladorFacturas();
+                controladorOrdenes = new ControladorOrdenes();
+                vistaAdministrativo = new VistaAdministrativo(controladorOrdenes, controladorFacturas, this);
                 vistaAdministrativo.setVisible(true);
                 break;
             case "Recepcionista":
-                controladorOrdenes = new ControladorOrdenes(this);
-                vistaRecepcionista = new VistaRecepcionista(controladorOrdenes);
+                controladorOrdenes = new ControladorOrdenes();
+                vistaRecepcionista = new VistaRecepcionista(controladorOrdenes, this);
                 vistaRecepcionista.setVisible(true);
                 break;
         }
+    }
+
+    public void cerrarSesion() {
+        controladorLogin = new ControladorLogin(this);
+        this.vistaLogin = new VistaLogin(controladorLogin);
+        vistaLogin.setVisible(true);
     }
 }

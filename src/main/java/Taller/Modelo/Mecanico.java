@@ -1,5 +1,5 @@
 package Taller.Modelo;
 
-public class Mecanico  {
+public class Mecanico {
     private int idMecanico;
 }

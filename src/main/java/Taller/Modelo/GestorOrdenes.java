@@ -122,7 +122,7 @@ public class GestorOrdenes {
         }
     }
 
-    public boolean registrarEntregaVehiculo(int idOrdenDeTrabajo) {
+    public boolean registrarEntregaOrden(int idOrdenDeTrabajo) {
         try (Connection connection = DriverManager.getConnection(connectionUrl, user, password)) {
             try {
                 PreparedStatement ps = connection.prepareStatement("UPDATE OrdenDeTrabajo SET estado = 'Finalizado' WHERE idOrdenDeTrabajo = ?;");
@@ -142,7 +142,7 @@ public class GestorOrdenes {
     public OrdenDeTrabajo obtenerOrdenMecanico(int legajo) {
         try (Connection connection = DriverManager.getConnection(connectionUrl, user, password)) {
             try {
-                PreparedStatement ps = connection.prepareStatement("SELECT TOP 1 * FROM ordenDeTrabajo WHERE legajoMecanicoAsignado = ? ORDER BY fechaCreacion;");
+                PreparedStatement ps = connection.prepareStatement("SELECT TOP 1 * FROM ordenDeTrabajo WHERE legajoMecanicoAsignado = ? AND estado = 'Pendiente' ORDER BY fechaCreacion;");
                 ps.setInt(1, legajo);
                 ResultSet rs = ps.executeQuery();
 
@@ -176,7 +176,7 @@ public class GestorOrdenes {
                 ps.setInt(1, legajo);
                 ps.setInt(2, rs.getInt("idOrdenDeTrabajo"));
 
-                if( ps.executeUpdate() > 0){
+                if (ps.executeUpdate() > 0) {
                     connection.commit();
                     return this.buscarOrdenPorPatente(rs.getString("patenteVehiculo"));
                 }
@@ -217,6 +217,40 @@ public class GestorOrdenes {
                 PreparedStatement ps = connection.prepareStatement("UPDATE OrdenDeTrabajo SET horasTrabajo = ? WHERE idOrdenDeTrabajo = ?;");
                 ps.setInt(1, horasTrabajo);
                 ps.setInt(2, idOrdenDeTrabajo);
+
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                System.err.println("Error en ejecucion de la sentencia SQL: " + ex.getMessage());
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error conectando a la BDD: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean registrarReparacionOrden(int idOrdenDeTrabajo) {
+        try (Connection connection = DriverManager.getConnection(connectionUrl, user, password)) {
+            try {
+                PreparedStatement ps = connection.prepareStatement("UPDATE OrdenDeTrabajo SET estado = 'Reparado' WHERE idOrdenDeTrabajo = ?;");
+                ps.setInt(1, idOrdenDeTrabajo);
+
+                return ps.executeUpdate() > 0;
+            } catch (SQLException ex) {
+                System.err.println("Error en ejecucion de la sentencia SQL: " + ex.getMessage());
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error conectando a la BDD: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean registrarPagoOrden(int idOrdenDeTrabajo) {
+        try (Connection connection = DriverManager.getConnection(connectionUrl, user, password)) {
+            try {
+                PreparedStatement ps = connection.prepareStatement("UPDATE OrdenDeTrabajo SET estado = 'Pagado' WHERE idOrdenDeTrabajo = ?;");
+                ps.setInt(1, idOrdenDeTrabajo);
 
                 return ps.executeUpdate() > 0;
             } catch (SQLException ex) {

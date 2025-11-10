@@ -1,43 +1,56 @@
 package Taller.Vistas;
 
+import Taller.Controlador.ControladorFacturas;
+import Taller.Controlador.ControladorMaestro;
+import Taller.Controlador.ControladorOrdenes;
+import Taller.Modelo.Factura;
+import Taller.Modelo.OrdenDeTrabajo;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.Objects;
 import java.util.Optional;
-
-// Importar los Gestores necesarios
-// import Taller.Gestor.GestorInventario;
-// import Taller.Gestor.GestorFacturacion;
 
 public class VistaAdministrativo extends JFrame {
 
-    // DEPENDENCIAS (Comentadas para solo diseño)
-    // private final GestorInventario gestorInventario;
-    // private final GestorFacturacion gestorFacturacion;
+    // Controladores
+    private final ControladorFacturas controladorFacturas;
+    private final ControladorOrdenes contraladorOrdenes;
+    private final ControladorMaestro controladorMaestro;
 
-    // Componentes de la GUI
+    //Objetos
+    private Factura factura;
+    private OrdenDeTrabajo ordenDeTrabajo;
+
+    // Componentes
     private JTabbedPane tabbedPane;
 
-    // Componentes Pestaña 1: Inventario
     private JTable tblRepuestosFaltantes;
-    private DefaultTableModel modeloTablaRepuestos; // Modelo para manipular la tabla
+    private DefaultTableModel modeloTablaRepuestos;
     private JButton btnSolicitarPedido;
     private JButton btnRegistrarRecepcion;
     private JTextField txtCodRepuestoRecibido;
     private JTextField txtCantRecibida;
 
-    // Componentes Pestaña 2: Pagos
+    // Campos pestaña de pagos
+    private JTextField txtPatentePago;
     private JTextField txtIdOrdenPago;
     private JTextField txtMontoRecibido;
     private JComboBox<String> cmbMetodoPago;
+    private JTextField txtNumTarjeta;
+    private JTextField txtTitularTarjeta;
+    private JTextField txtCodigoAut;
+    private JButton btnBuscarFactura;
     private JButton btnConfirmarPago;
 
-    /**
-     * Constructor enfocado solo en el diseño.
-     */
-    public VistaAdministrativo(/* GestorInventario gi, GestorFacturacion gf */) {
+    public VistaAdministrativo(ControladorOrdenes controladorOrdenes, ControladorFacturas controladorFacturas, ControladorMaestro controladorMaestro) {
         super("Módulo Administrativo - Finanzas e Inventario");
+
+        this.contraladorOrdenes = controladorOrdenes;
+        this.controladorFacturas = controladorFacturas;
+        this.controladorMaestro = controladorMaestro;
 
         inicializarComponentes();
 
@@ -46,24 +59,28 @@ public class VistaAdministrativo extends JFrame {
         this.setLocationRelativeTo(null);
     }
 
-    // =================================================================================
-    // MAIN TEMPORAL PARA VER EL DISEÑO
-    // =================================================================================
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new VistaAdministrativo().setVisible(true);
-        });
-    }
-
-    // =================================================================================
-    // PESTAÑA 1: INVENTARIO (PEDIDOS Y RECEPCIÓN)
-    // =================================================================================
-
     private void inicializarComponentes() {
         tabbedPane = new JTabbedPane();
         tabbedPane.addTab("1. Gestión de Inventario/Pedidos", crearPanelInventario());
         tabbedPane.addTab("2. Procesamiento de Pagos/Facturación", crearPanelPagos());
-        this.add(tabbedPane);
+
+        this.add(tabbedPane, BorderLayout.CENTER);
+        this.add(crearPanelCerrarSesion(), BorderLayout.SOUTH);
+    }
+
+    private JPanel crearPanelCerrarSesion() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        JButton btnCerrarSesion = new JButton("Cerrar Sesión");
+        btnCerrarSesion.setBackground(new Color(200, 80, 80));
+        btnCerrarSesion.setForeground(Color.BLACK);
+        btnCerrarSesion.addActionListener(this::accionCerrarSesion);
+        panel.add(btnCerrarSesion);
+        return panel;
+    }
+
+    private void accionCerrarSesion(ActionEvent e) {
+        dispose();
+        controladorMaestro.cerrarSesion();
     }
 
     private JPanel crearPanelInventario() {
@@ -87,7 +104,6 @@ public class VistaAdministrativo extends JFrame {
         modeloTablaRepuestos = new DefaultTableModel(columnas, 0);
         tblRepuestosFaltantes = new JTable(modeloTablaRepuestos);
 
-        // Simulación: Cargar filas para probar el borrado
         modeloTablaRepuestos.addRow(new Object[]{"Filt-01", "Filtro Aceite", 5, 45.50, 227.50});
         modeloTablaRepuestos.addRow(new Object[]{"Filt-02", "Filtro Aire", 10, 30.00, 300.00});
 
@@ -116,7 +132,6 @@ public class VistaAdministrativo extends JFrame {
         btnRegistrarRecepcion = new JButton("Registrar Recepción");
         btnRegistrarRecepcion.setBackground(new Color(40, 150, 40));
         btnRegistrarRecepcion.setForeground(Color.WHITE);
-
         btnRegistrarRecepcion.addActionListener(this::registrarRecepcionDeRepuestos);
 
         pnlRecepcion.add(btnRegistrarRecepcion);
@@ -141,11 +156,8 @@ public class VistaAdministrativo extends JFrame {
             return;
         }
 
-        // SIMULACIÓN VISUAL: Asumimos que la delegación fue exitosa para actualizar la tabla.
         actualizarTablaTrasRecepcion(codigo, cantidad);
     }
-
-    // PESTAÑA 2: PROCESAMIENTO DE PAGOS Y FACTURACIÓN
 
     private void actualizarTablaTrasRecepcion(String codigoRecibido, int cantidadRecibida) {
         DefaultTableModel modelo = (DefaultTableModel) tblRepuestosFaltantes.getModel();
@@ -154,9 +166,8 @@ public class VistaAdministrativo extends JFrame {
             String codigoTabla = (String) modelo.getValueAt(i, 0);
 
             if (codigoTabla.equals(codigoRecibido)) {
-
                 Object cantidadObj = modelo.getValueAt(i, 2);
-                int cantidadNecesaria = 0;
+                int cantidadNecesaria;
 
                 try {
                     cantidadNecesaria = ((Number) cantidadObj).intValue();
@@ -165,13 +176,10 @@ public class VistaAdministrativo extends JFrame {
                 }
 
                 if (cantidadRecibida >= cantidadNecesaria) {
-                    // Si se recibió la cantidad completa o más: BORRAMOS LA FILA
                     modelo.removeRow(i);
                     JOptionPane.showMessageDialog(this, "¡Recepción Completa! Repuesto " + codigoRecibido + " borrado de la lista de pendientes.", "Actualización", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    // Si se recibió una cantidad PARCIAL: ACTUALIZAMOS LA FILA
                     int nuevoFaltante = cantidadNecesaria - cantidadRecibida;
-
                     double precioUnitario = (double) modelo.getValueAt(i, 3);
                     double nuevoTotal = nuevoFaltante * precioUnitario;
 
@@ -189,120 +197,184 @@ public class VistaAdministrativo extends JFrame {
         JOptionPane.showMessageDialog(this, "No se encontró ningún pedido pendiente para el código " + codigoRecibido + ".", "Búsqueda Fallida", JOptionPane.WARNING_MESSAGE);
     }
 
+    // Panel de pagos
     private JPanel crearPanelPagos() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.insets = new Insets(8, 10, 8, 10);
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // --- 1. ID Orden de Trabajo ---
+        // --- 1. Campo Patente ---
         gbc.gridx = 0;
         gbc.gridy = 0;
-        panel.add(new JLabel("ID Orden de Pago:"), gbc);
+        panel.add(new JLabel("Patente del Vehículo:"), gbc);
 
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        txtIdOrdenPago = new JTextField(15);
+        txtPatentePago = new JTextField(10);
+        panel.add(txtPatentePago, gbc);
+
+        btnBuscarFactura = new JButton("Buscar Factura");
+        gbc.gridx = 2;
+        btnBuscarFactura.setBackground(new Color(70, 130, 180));
+        btnBuscarFactura.setForeground(Color.WHITE);
+        btnBuscarFactura.addActionListener(this::buscarFactura);
+        panel.add(btnBuscarFactura, gbc);
+
+        // --- 2. ID Orden ---
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("ID Orden Asociada:"), gbc);
+        gbc.gridx = 1;
+        txtIdOrdenPago = new JTextField(10);
+        txtIdOrdenPago.setEditable(false);
         panel.add(txtIdOrdenPago, gbc);
 
-        // --- 2. Método de Pago ---
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0.0;
-        panel.add(new JLabel("Método de Pago:"), gbc);
-
+        // --- 3. Monto ---
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Monto a Pagar:"), gbc);
         gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        cmbMetodoPago = new JComboBox<>(new String[]{"Efectivo", "Tarjeta/Transferencia"});
-        panel.add(cmbMetodoPago, gbc);
-
-        // --- 3. Monto Recibido ---
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0.0;
-        panel.add(new JLabel("Monto Recibido:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        txtMontoRecibido = new JTextField(15);
+        txtMontoRecibido = new JTextField(10);
         panel.add(txtMontoRecibido, gbc);
 
-        // --- 4. Botón de Confirmación ---
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;
+        // --- 4. Método de Pago ---
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(new JLabel("Método de Pago:"), gbc);
+        gbc.gridx = 1;
+        cmbMetodoPago = new JComboBox<>(new String[]{"Efectivo", "Tarjeta/Transferencia"});
+        panel.add(cmbMetodoPago, gbc);
+        cmbMetodoPago.addActionListener(ev -> toggleCamposTarjeta());
 
-        btnConfirmarPago = new JButton("CONFIRMAR PAGO Y HABILITAR RETIRO");
+        // --- 5. Campos adicionales para tarjeta ---
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(new JLabel("Número de Tarjeta:"), gbc);
+        gbc.gridx = 1;
+        txtNumTarjeta = new JTextField(15);
+        panel.add(txtNumTarjeta, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 5;
+        panel.add(new JLabel("Titular de Tarjeta:"), gbc);
+        gbc.gridx = 1;
+        txtTitularTarjeta = new JTextField(15);
+        panel.add(txtTitularTarjeta, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 6;
+        panel.add(new JLabel("Código Autorización:"), gbc);
+        gbc.gridx = 1;
+        txtCodigoAut = new JTextField(10);
+        panel.add(txtCodigoAut, gbc);
+
+        // Inicialmente, ocultar los campos de tarjeta
+        setCamposTarjetaVisible(false);
+
+        // --- 6. Botón Confirmar Pago ---
+        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 3;
+        gbc.anchor = GridBagConstraints.CENTER;
+        btnConfirmarPago = new JButton("CONFIRMAR PAGO Y ACEPTAR RETIRO");
         btnConfirmarPago.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnConfirmarPago.setBackground(new Color(250, 100, 100));
         btnConfirmarPago.setForeground(Color.WHITE);
-
-        // CONEXIÓN CLAVE: Añadir el ActionListener para la facturación
         btnConfirmarPago.addActionListener(this::confirmarPago);
-
         panel.add(btnConfirmarPago, gbc);
-
-        // Etiqueta de nota
-        JLabel lblNota = new JLabel("<html><i>Al confirmar, se registra el pago y se notifica al Recepcionista para el retiro.</i></html>", SwingConstants.CENTER);
-        gbc.gridy = 4;
-        panel.add(lblNota, gbc);
 
         return panel;
     }
 
-    /**
-     * Manejador de evento para el botón de Confirmar Pago.
-     * Realiza validación de formato y delega la lógica de facturación.
-     */
+    private void toggleCamposTarjeta() {
+        boolean esTarjeta = cmbMetodoPago.getSelectedItem().toString().equalsIgnoreCase("Tarjeta/Transferencia");
+        setCamposTarjetaVisible(esTarjeta);
+    }
+
+    private void setCamposTarjetaVisible(boolean visible) {
+        txtNumTarjeta.setVisible(visible);
+        txtTitularTarjeta.setVisible(visible);
+        txtCodigoAut.setVisible(visible);
+    }
+
+    private void buscarFactura(ActionEvent e) {
+        String patente = txtPatentePago.getText().trim();
+        if (patente.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Debe ingresar una patente.", "Campo Vacío", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        ordenDeTrabajo = contraladorOrdenes.buscarOrdenPorPatente(patente);
+        if (ordenDeTrabajo == null){
+            JOptionPane.showMessageDialog(this, "No se encontro orden asociada a la patente",
+                    "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!Objects.equals(ordenDeTrabajo.getEstado(), "Reparado")){
+            JOptionPane.showMessageDialog(this, "La orden no se encuentra en estado \"Reparado\"\nNo se puede generar una factura.",
+                    "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        factura = controladorFacturas.obtenerFacturaPorIdOrden(ordenDeTrabajo.getIdOrdenDeTrabajo());
+        if (factura == null){
+            JOptionPane.showMessageDialog(this, "No se pudo obtener la factura asociada a la patente",
+                    "Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JOptionPane.showMessageDialog(this, "Factura encontrada para la patente " + patente + ".\nDatos cargados automáticamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+        txtIdOrdenPago.setText(String.valueOf((factura.getIdFactura())));
+        txtMontoRecibido.setText(String.valueOf(factura.getTotal()));
+    }
+
     private void confirmarPago(ActionEvent e) {
         String idOrdenStr = txtIdOrdenPago.getText().trim();
         String montoStr = txtMontoRecibido.getText().trim();
         String metodoPago = (String) cmbMetodoPago.getSelectedItem();
 
-        // 1. VALIDACIÓN DE FORMATO
         if (idOrdenStr.isEmpty() || montoStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar el ID de la Orden y el Monto.", "Faltan Datos", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Debe buscar una factura y completar los datos de pago.", "Datos Incompletos", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        int idOrden;
-        double monto;
-        try {
-            idOrden = Integer.parseInt(idOrdenStr);
-            monto = Double.parseDouble(montoStr);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "El ID de Orden y el Monto deben ser numéricos.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
-            return;
+        if (metodoPago.equalsIgnoreCase("Tarjeta/Transferencia")) {
+            if (txtNumTarjeta.getText().trim().isEmpty() ||
+                    txtTitularTarjeta.getText().trim().isEmpty() ||
+                    txtCodigoAut.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Debe completar todos los campos de tarjeta.", "Datos Incompletos", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
         }
 
-        // 2. LLAMADA AL GESTOR (Delegación de la Lógica a tu gestorFacturacion)
+        // Logica de tramitacion y confirmacion de pago con entidad bancaria sí corresponde
 
-        /*
-        boolean exito = gestorFacturacion.registrarPagoYFacturar(idOrden, monto, metodoPago);
+        boolean respuesta;
 
-        if (exito) {
-            JOptionPane.showMessageDialog(this,
-                "Pago de $ " + monto + " registrado y Orden #" + idOrden + " habilitada para retiro.",
-                "Pago Confirmado", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this,
-                "Error al procesar el pago o la orden no está lista para facturar.",
-                "Error de Facturación", JOptionPane.ERROR_MESSAGE);
+        respuesta = contraladorOrdenes.registrarPagoOrden(ordenDeTrabajo.getIdOrdenDeTrabajo());
+        if (!respuesta){
+            JOptionPane.showMessageDialog(this, "No se actualizar el estado de la orden.", "Error", JOptionPane.WARNING_MESSAGE);
         }
-        */
 
-        // SIMULACIÓN VISUAL
+        respuesta = controladorFacturas.registrarPagoFactura(factura.getIdFactura());
+        if (!respuesta){
+            JOptionPane.showMessageDialog(this, "No se actualizar el estado de la factura.", "Error", JOptionPane.WARNING_MESSAGE);
+        }
+
         JOptionPane.showMessageDialog(this,
-                "SIMULACIÓN EXITOSA: La lógica de registro de pago de $ " + monto + " para la Orden #" + idOrden + " ha sido DELEGADA al GestorFacturacion.",
-                "Delegación Completa", JOptionPane.INFORMATION_MESSAGE);
+                "Pago registrado correctamente para la orden #" + idOrdenStr +
+                        "\nMétodo: " + metodoPago +
+                        "\nMonto: $" + montoStr +
+                        "\nVehículo habilitado para retiro.",
+                "Pago Confirmado", JOptionPane.INFORMATION_MESSAGE);
 
-        // Limpiar campos después de la simulación
+        limpiarCamposPago();
+    }
+
+    private void limpiarCamposPago() {
+        txtPatentePago.setText("");
         txtIdOrdenPago.setText("");
         txtMontoRecibido.setText("");
+        txtNumTarjeta.setText("");
+        txtTitularTarjeta.setText("");
+        txtCodigoAut.setText("");
+        cmbMetodoPago.setSelectedIndex(0);
+        setCamposTarjetaVisible(false);
     }
 }
