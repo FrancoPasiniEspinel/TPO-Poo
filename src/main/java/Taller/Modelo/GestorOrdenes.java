@@ -12,7 +12,7 @@ public class GestorOrdenes {
     public GestorOrdenes() {
     }
 
-    public String generarOrden(int dni, String nombre, int telefono, String patente, String marca, String modelo, int añoFabricacion, String descripcion) {
+    public boolean generarOrden(int dni, String nombre, int telefono, String patente, String marca, String modelo, int añoFabricacion, String descripcion) {
         try (Connection connection = DriverManager.getConnection(connectionUrl, user, password)) {
             connection.setAutoCommit(false);
             PreparedStatement ps;
@@ -26,19 +26,25 @@ public class GestorOrdenes {
 
                 filas = ps.executeUpdate();
                 if (filas == 0) {
-                    return "fallo";
+                    connection.rollback();
+                    return false;
                 }
 
-
-                ps = connection.prepareStatement("INSERT INTO Vehiculo (patenteVehiculo, marcaVehiculo, modeloVehiculo, añoFabricacionvehiculo) VALUES (?, ?, ?, ?)");
+                ps = connection.prepareStatement("SELECT 1 FROM Vehiculo WHERE patenteVehiculo = ?");
                 ps.setString(1, patente);
-                ps.setString(2, marca);
-                ps.setString(3, modelo);
-                ps.setInt(4, añoFabricacion);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) {
+                    ps = connection.prepareStatement("INSERT INTO Vehiculo (patenteVehiculo, marcaVehiculo, modeloVehiculo, añoFabricacionvehiculo) VALUES (?, ?, ?, ?)");
+                    ps.setString(1, patente);
+                    ps.setString(2, marca);
+                    ps.setString(3, modelo);
+                    ps.setInt(4, añoFabricacion);
 
-                filas = ps.executeUpdate();
-                if (filas == 0) {
-                    return "fallo";
+                    filas = ps.executeUpdate();
+                    if (filas == 0) {
+                        connection.rollback();
+                        return false;
+                    }
                 }
 
                 ps = connection.prepareStatement(
@@ -51,26 +57,21 @@ public class GestorOrdenes {
 
                 filas = ps.executeUpdate();
                 if (filas == 0) {
-                    return "fallo";
+                    connection.rollback();
+                    return false;
                 }
 
                 connection.commit();
-                return "exito";
+                return true;
             } catch (SQLException ex) {
-                if (ex.getErrorCode() == 2627 || ex.getErrorCode() == 2601) {
-                    System.err.println("Error en ejecucion de la sentencia SQL: " + ex.getMessage());
-                    connection.rollback();
-                    return "duplicado";
-                } else {
-                    System.err.println("Error en ejecucion de la sentencia SQL: " + ex.getMessage());
-                    connection.rollback();
-                    return "fallo";
-                }
+                System.err.println("Error en ejecucion de la sentencia SQL: " + ex.getMessage());
+                connection.rollback();
+                return false;
             }
 
         } catch (SQLException e) {
             System.err.println("Error conectando a la BDD: " + e.getMessage());
-            return "fallo";
+            return false;
         }
     }
 
@@ -84,7 +85,8 @@ public class GestorOrdenes {
                                         FROM OrdenDeTrabajo o
                                         JOIN Cliente c ON o.idCliente = c.idCliente
                                         JOIN Vehiculo v ON o.patenteVehiculo = v.patenteVehiculo
-                                        WHERE v.patenteVehiculo = ?;
+                                        WHERE v.patenteVehiculo = ?
+                                        ORDER BY o.idOrdenDeTrabajo DESC;
                         """);
                 ps.setString(1, patente);
 
