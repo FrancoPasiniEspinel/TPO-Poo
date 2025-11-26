@@ -172,8 +172,6 @@ public class VistaRecepcionista extends JFrame {
             respuesta = "noNumerico";
         }
 
-        System.out.println(respuesta);
-
         // Interpretación del resultado devuelto por el controlador
         switch (respuesta) {
             case "fallo":

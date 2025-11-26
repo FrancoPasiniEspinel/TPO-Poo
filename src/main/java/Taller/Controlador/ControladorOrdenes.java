@@ -13,9 +13,10 @@ public class ControladorOrdenes {
 
     public String generarOrden(int dni, String nombre, int telefono, String patente, String marca, String modelo, int añoFabricacion, String descripcion) {
         OrdenDeTrabajo ordenAsociada = gestorOrdenes.buscarOrdenPorPatente(patente);
-        System.out.println(ordenAsociada.getEstado());
-        if (ordenAsociada != null && !ordenAsociada.getEstado().equals("Finalizado")) {
-            return "duplicado";
+        if(ordenAsociada != null) {
+            if (!ordenAsociada.getEstado().equals("Finalizado")) {
+                return "duplicado";
+            }
         }
         return gestorOrdenes.generarOrden(dni, nombre, telefono, patente, marca, modelo, añoFabricacion, descripcion) ? "exito" : "fallo";
     }
