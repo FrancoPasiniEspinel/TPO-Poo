@@ -1,6 +1,3 @@
-// Versión modificada de VistaRecepcionista con estilo profesional "Corporate Minimal"
-// Aplicado manualmente componente por componente (Opción B)
-
 package Taller.Vistas;
 
 import Taller.Controlador.ControladorMaestro;
