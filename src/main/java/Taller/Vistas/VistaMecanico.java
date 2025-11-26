@@ -293,9 +293,9 @@ public class VistaMecanico extends JFrame {
                 "Estado: " + ordenAsignada.getEstado() + "\n" +
                 "Fecha creación: " + ordenAsignada.getFechaCreacion() + "\n\n" +
                 "CLIENTE:\n" +
-                "DNI: " + c.dni() + "\n" +
-                "Nombre: " + c.nombre() + "\n" +
-                "Teléfono: " + c.telefono() + "\n\n" +
+                "DNI: " + c.getDni() + "\n" +
+                "Nombre: " + c.getNombre() + "\n" +
+                "Teléfono: " + c.getTelefono() + "\n\n" +
                 "VEHÍCULO:\n" +
                 "Patente: " + v.getPatente() + "\n" +
                 "Marca: " + v.getMarca() + "\n" +
